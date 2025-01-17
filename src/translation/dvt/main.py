@@ -28,7 +28,7 @@ class ValidationEntity(enum.Enum):
 
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
 COMPOSER_GCS_BUCKET = os.environ.get("COMPOSER_GCS_BUCKET")
-SECRET_PREFIX = "secret:"
+SECRET_PREFIX = "secret-"
 
 
 # create source and traget connection command, supports all type of connections,
@@ -115,7 +115,7 @@ def connection_string(conn_config):
             conn_name = val + "_CONN"
             continue
         if val.startswith(SECRET_PREFIX):
-            val = get_db_password(val[len(SECRET_PREFIX) :])
+            val = get_db_password(val.removeprefix(SECRET_PREFIX))
         conn_string = conn_string + f"--{key} '{val}' "
     if conn_type != "BigQuery":
         conn_string = (
@@ -273,7 +273,7 @@ def run():
     config = request_content["config"]
     validation_params_from_gcs = request_content["validation_params_from_gcs"]
     validation_type = config["type"]
-    if validation_type in ["ddl", "data"]:
+    if validation_type in ["ddl", "data", "dml"]:
         table = request_content["table"]
         dvt_cmd, cmd_errors = get_dvt_cmd_ddl_validation(
             config, table, validation_params_from_gcs

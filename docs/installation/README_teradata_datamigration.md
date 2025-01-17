@@ -87,17 +87,17 @@ _DATA_SOURCE=teradata
         sudo ./TeradataToolsAndUtilitiesBase/setup.sh 1 2 5 15
         ```
 
-* Copy teradata jdbc jar to Agent VM (dm-vm-teradata-bq) at path:  `/opt/migration_project_teradata_bq/`
-    1. Download the jar from teradata downloads (if you have not already done this in the main ReadMe setup): [https://downloads.teradata.com/download/connectivity/jdbc-driver](https://downloads.teradata.com/download/connectivity/jdbc-driver)
+* Copy Teradata JDBC JAR to Agent VM (dm-vm-teradata-bq) at path:  `/opt/migration_project_teradata_bq/`
+    1. If you have not already done this during the main ReadMe setup instructions, download the JAR from Teradata downloads: [https://downloads.teradata.com/download/connectivity/jdbc-driver](https://downloads.teradata.com/download/connectivity/jdbc-driver)
     2. Upload the package to a bucket (_&lt;temp-bucket>_)
     3. SSH into the Agent VM and switch user to root
-    4. Copy the teradata jdbc jar from _&lt;temp-bucket>_ to Agent VM (Make sure it is copied with name `terajdbc4.jar`)
+    4. Copy the Teradata JDBC JAR from _&lt;temp-bucket>_ to Agent VM (ensure it is named `terajdbc4.jar`)
         ```
         gsutil cp gs://<temp-bucket>/terajdbc4.jar /opt/migration_project_teradata_bq/
         ```
 
 
-* Ensure the teradata agent VM (Google Compute Engine) has the following folder structure which signifies successful deployment of executables in the Agent VM `/opt/migration_project_teradata_bq/`
+* Ensure the Teradata Agent VM (Google Compute Engine) has the following folder structure which signifies successful deployment of executables in the Agent VM `/opt/migration_project_teradata_bq/`
 
 ```
 > pwd
@@ -220,7 +220,7 @@ The below list of logging tables are created by terraform templates and record a
              "host": "<source_db_host_or_ip>",
              "port": 1025,
              "user-name": "<source_db_username>",
-             "password": "secret:<teradata_secret_name>"
+             "password": "secret-<teradata_secret_name>"
          },
          "target_config": {
              "target_type": "BigQuery",
@@ -564,9 +564,9 @@ Source datawarehouse : Teradata
    </td>
    <td>Secret Manager key name
 <p>
-<strong>secret: &lt;secret key name></strong>
+<strong>secret- &lt;secret key name></strong>
 <p>
-For example - secret:edw_credentials
+For example - secret-edw_credentials
    </td>
   </tr>
   <tr>
@@ -665,7 +665,7 @@ Eg:
 
 **location:** same as data location for the dataset
 
-**teradata-config:** contains host, user and password keys for the teradata server. Provide password value as _secret:&lt;secret-name-suffix>_. This secret should be created in the Secret Manager as _secret-&lt;secret-name-suffix>_.
+**teradata-config:** contains host, user and password keys for the teradata server. Provide password value as _secret-&lt;secret-name-suffix>_. This secret should be created in the Secret Manager as _secret-&lt;secret-name-suffix>_.
 
 <span style="text-decoration:underline;">Note</span> that target table name case is sensitive due to case sensitive nature of bigquery. So in the case of only Data Migration, it needs to be always be in the same case as how they exist in source Teradata and ultimately match with validation_config source_target_table mapping in config.json for DVT validations
 

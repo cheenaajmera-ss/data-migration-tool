@@ -53,7 +53,11 @@ variable "zone" {
 variable "machine_type" {
   type        = string
   description = "machine_type for compute engine instance"
+<<<<<<< HEAD
   default     = "n1-highcpu-8"
+=======
+  default     = "n2-standard-16"
+>>>>>>> 1aced2417e3f09a8fee6564805c60a9069891c0d
 }
 variable "network" {
   type        = string
@@ -68,7 +72,8 @@ variable "subnetwork" {
 variable "image" {
   type        = string
   description = "image of compute engine instance"
-  default     = "ubuntu-minimal-2204-jammy-v20220902"
+  default     = "family/ubuntu-minimal-2204-lts"
+  # Can pin to a specific version, eg. "ubuntu-minimal-2204-jammy-v20240926"
 }
 variable "boot_size" {
   type        = number
@@ -89,7 +94,7 @@ variable "disk_type" {
 variable "disk_size" {
   type        = number
   description = "attached disk size for data migration"
-  default     = 100
+  default     = 1000
 }
 variable "datamigration_teradata_script" {
   type        = string
