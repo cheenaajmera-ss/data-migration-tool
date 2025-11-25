@@ -25,11 +25,6 @@ RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 RUN pip install ibm_db_sa
 
-# Copy service account key and activate
-COPY dmt-sa-gcc-key.json /tmp/dmt-sa-gcc-key.json
-RUN gcloud auth activate-service-account dmt-sa-gcc@qwiklabs-gcp-01-53eaac22177f.iam.gserviceaccount.com \
-    --key-file=/tmp/dmt-sa-gcc-key.json
-
 # Oracle DVT Setup
 RUN chmod +x ./oracle/oracle_dvt_setup.sh && \
     ./oracle/oracle_dvt_setup.sh ${_oracle_instant_client_file_path} ${_oracle_odbc_version_number}
