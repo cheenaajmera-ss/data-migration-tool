@@ -22,9 +22,7 @@ from airflow import models
 from airflow.decorators import task
 from airflow.exceptions import AirflowFailException
 from airflow.operators.python import PythonOperator
-from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
-    KubernetesPodOperator,
-)
+from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
 from airflow.providers.google.cloud.operators.cloud_composer import (
     CloudComposerGetEnvironmentOperator,
 )
@@ -339,7 +337,7 @@ def parallelize_dvt_tasks(input_json):
     config = ast.literal_eval(str(input_json["config"]))
     translation_type = config["type"]
     validation_type = config["validation_config"]["validation_type"]
-    validation_only = config["validation_only"]
+    validation_only = config.get("validation_only", "no")
     validation_params_file_path = config["validation_config"][
         "validation_params_file_path"
     ]
@@ -383,7 +381,7 @@ def parallelize_dvt_tasks(input_json):
 
 with models.DAG(
     "validation_dag",
-    schedule_interval=None,
+    schedule=None,
     default_args=default_dag_args,
     render_template_as_native_obj=True,
     user_defined_macros={
@@ -407,10 +405,9 @@ with models.DAG(
         task_id="ex-dvt",
         name="ex-dvt",
         max_active_tis_per_dag=3,
-        namespace="default",
+        namespace="composer-user-workloads",
         image=dvt_image,
         cmds=["bash", "-cx"],
-        service_account_name="sa-k8s",
         container_resources=k8s_models.V1ResourceRequirements(
             limits={
                 "memory": "{{ pod_mem(ti.xcom_pull(key='config', task_ids='get_config')) }}",
