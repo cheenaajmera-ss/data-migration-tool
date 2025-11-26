@@ -16,16 +16,14 @@ locals {
   datamigration_teradata_vmstartup_script = "${var.datamigration_teradata_script}/vm_start_script.sh"
 }
 
-resource "google_service_account" "service_account" {
-  project      = var.project_id
-  account_id   = var.agentvm_sa
-  display_name = "Service Account for GCE Agent VM and DTS"
+data "google_service_account" "service_account" {
+  project    = var.project_id
+  account_id = var.agentvm_sa
 }
 
 /* Provide required IAM roles to Agent VM Service Account */
 
 resource "google_project_iam_member" "agentsa_iam" {
-  depends_on = [google_service_account.service_account]
   project    = var.project_id
   for_each   = toset(var.agentsa_roles)
   role       = each.value
@@ -37,7 +35,6 @@ If you do not want to set up auto configured IPs for NAT and Cloud Router, pleas
 your network requirements and set the variable create_nat = false in variables.tf.
 The Compute Engine Teradata Agent VM requires a NAT connection for start up script*/
 resource "google_compute_router" "router" {
-  depends_on = [google_project_iam_member.agentsa_iam]
   count      = var.create_nat ? 1 : 0
   name       = var.cloud_router
   region     = var.location
@@ -49,11 +46,10 @@ resource "google_compute_router" "router" {
 }
 
 resource "google_compute_router_nat" "nat" {
-  depends_on                         = [google_compute_router.router]
   count                              = var.create_nat ? 1 : 0
   name                               = var.cloud_nat
-  router                             = var.cloud_router
   region                             = var.location
+  router                             = google_compute_router.router[0].name
   nat_ip_allocate_option             = "AUTO_ONLY"
   source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
 
@@ -65,7 +61,6 @@ resource "google_compute_router_nat" "nat" {
 
 #Create an Attached disk
 resource "google_compute_disk" "dm-disk-terdata-bq" {
-  depends_on = [google_compute_router_nat.nat]
   project    = var.project_id
   name       = var.disk_name
   type       = var.disk_type
@@ -78,7 +73,6 @@ resource "google_compute_disk" "dm-disk-terdata-bq" {
 
 #Create an compute instance
 resource "google_compute_instance" "dm-vm-teradata-bq" {
-  depends_on   = [google_compute_disk.dm-disk-terdata-bq]
   name         = var.name
   zone         = var.zone
   machine_type = var.machine_type
@@ -98,7 +92,7 @@ resource "google_compute_instance" "dm-vm-teradata-bq" {
   }
 
   attached_disk {
-    source = google_compute_disk.dm-disk-terdata-bq.id
+    source = google_compute_disk.dm-disk-terdata-bq.self_link
   }
 
   service_account {
