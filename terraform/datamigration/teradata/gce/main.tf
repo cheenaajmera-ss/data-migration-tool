@@ -16,14 +16,16 @@ locals {
   datamigration_teradata_vmstartup_script = "${var.datamigration_teradata_script}/vm_start_script.sh"
 }
 
-data "google_service_account" "service_account" {
-  project    = var.project_id
-  account_id = var.agentvm_sa
+resource "google_service_account" "service_account" {
+  project      = var.project_id
+  account_id   = var.agentvm_sa
+  display_name = "Agent VM Service Account"
 }
 
 /* Provide required IAM roles to Agent VM Service Account */
 
 resource "google_project_iam_member" "agentsa_iam" {
+  depends_on = [google_service_account.service_account]
   project    = var.project_id
   for_each   = toset(var.agentsa_roles)
   role       = each.value
