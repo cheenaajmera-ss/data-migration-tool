@@ -350,24 +350,36 @@ resource "null_resource" "upload_common_utils" {
 
 
 /* Composer 2: Set up firewall rule to allow Composer GKE cluster pods (KubernetesPodOperator) to reach the rest of the VPC network. */
+/* Composer 2 only: Get the GKE cluster associated with Composer. */
 data "google_container_cluster" "composer_gke_cluster" {
+  count      = (startswith(var.image_version, "composer-2") || startswith(var.image_version, "composer-3")) ? 1 : 0
   count      = startswith(var.image_version, "composer-2") ? 1 : 0
   depends_on = [google_composer_environment.composer_env]
   name     = length(google_composer_environment.composer_env.config[0].gke_cluster) > 0 ? split("/", google_composer_environment.composer_env.config[0].gke_cluster)[5] : ""
   location = length(google_composer_environment.composer_env.config[0].gke_cluster) > 0 ? split("/", google_composer_environment.composer_env.config[0].gke_cluster)[3] : ""
+  name       = split("/", google_composer_environment.composer_env.config[0].gke_cluster)[5]
+  location   = split("/", google_composer_environment.composer_env.config[0].gke_cluster)[3]
 }
 
+/* Composer 2 only: Firewall for KubernetesPodOperator pods. */
 resource "google_compute_firewall" "dmt-pod-operator" {
   count = (startswith(var.image_version, "composer-2") || startswith(var.image_version, "composer-3")) ? 1 : 0
+  count = startswith(var.image_version, "composer-2") ? 1 : 0
   name        = "dmt-allow-composer-gke-pods"
   network     = google_composer_environment.composer_env.config.0.node_config.0.network
   description = "Allows Composer cluster GKE pods to reach the default VPC range."
+  description = "Allows Composer 2 GKE pods to reach the VPC."
 
   priority      = 1001
   direction     = "INGRESS"
   source_ranges = startswith(var.image_version, "composer-2") ? [
-    data.google_container_cluster.composer_gke_cluster[0].ip_allocation_policy.0.cluster_ipv4_cidr_block
-  ] : [google_composer_environment.composer_env.config[0].node_config[0].ip_allocation_policy[0].cluster_ipv4_cidr_block]
+  priority  = 1001
+  direction = "INGRESS"
+  source_ranges = [
+    data.google_container_cluster.composer_gke_cluster[0].ip_allocation_policy[0].cluster_ipv4_cidr_block
+  ] : [google_composer_environment.composer_env.config[0].workloads_config[0].scheduler[0].ip_allocation_policy[0].cluster_ipv4_cidr_block]
+  ]
+
   allow {
     protocol = "all"
   }
