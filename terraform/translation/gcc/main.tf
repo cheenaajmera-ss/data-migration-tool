@@ -353,8 +353,8 @@ resource "null_resource" "upload_common_utils" {
 data "google_container_cluster" "composer_gke_cluster" {
   count    = (startswith(var.image_version, "composer-2") || startswith(var.image_version, "composer-3")) ? 1 : 0
   depends_on = [google_composer_environment.composer_env]
-  name     = split("/", google_composer_environment.composer_env.config.0.gke_cluster)[5]
-  location = split("/", google_composer_environment.composer_env.config.0.gke_cluster)[3]
+  name     = split("/", google_composer_environment.composer_env.config[0].gke_cluster)[5]
+  location = split("/", google_composer_environment.composer_env.config[0].gke_cluster)[3]
 }
 
 resource "google_compute_firewall" "dmt-pod-operator" {
